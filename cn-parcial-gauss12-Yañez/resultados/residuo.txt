@@ -1,0 +1,47 @@
+RESIDUO Y VERIFICACIÓN — todos los residuos usan A y b exactos (racionales) y x tal cual (sin redondeo)
+
+== T2. Comparación de las corridas del mismo código ==
+modo          mult. máx  bits mult  crecimiento         ‖r‖∞  err. rel. (norma ∞)  díg. min  bits perdidos
+ninguno      2.7526e+13       44.6   2.6412e+03     1.772e-7           2.0803e-10         7           20.8
+parcial      6.1988e-01       -0.7   1.0000e+00    5.373e-10           5.5201e-13         9           12.3
+escalado     2.4656e+09       31.2   1.7832e+00    2.291e-10           2.3573e-13        10           11.1
+bits mult = log2(multiplicador máximo): bits de mantisa del operando pequeño que el alineamiento de exponentes puede empujar fuera de los 53 bits.
+bits perdidos = log2(error relativo / 2^-53): pérdida efectiva medida frente a la referencia exacta.
+
+== T4. Residuo r = b − A·x (pivoteo parcial escalado), precisión extendida (racional exacto) ==
+r[ 1] =   -8.076888766e-21
+r[ 2] =   -8.729114465e-13
+r[ 3] =   -3.592964167e-18
+r[ 4] =     4.39702914e-12
+r[ 5] =    -8.92233005e-20
+r[ 6] =    2.290876438e-10
+r[ 7] =   -1.390746536e-17
+r[ 8] =    3.113763516e-11
+r[ 9] =   -1.802909306e-20
+r[10] =   -3.566633905e-12
+r[11] =    9.885511242e-18
+r[12] =     5.16308001e-11
+‖r‖∞ = 2.290876438e-10
+‖b‖∞ = 780791.4416
+‖A‖∞ = 7.20362e+6   ‖x‖∞ = 2.84611
+error inverso relativo ‖r‖∞ / (‖A‖∞·‖x‖∞) = 1.117e-17   (u = 2^-53 ≈ 1.11e-16)
+
+== Refinamiento iterativo (reutiliza L y U; residuo exacto, corrección en doble) ==
+iter       ‖r‖∞ (antes)      ‖d‖∞/‖x‖∞   err. rel. iterado en doble   err. rel. iterado extendido
+0             2.291e-10              –                   2.3573e-13                    2.3573e-13
+1             2.291e-10     2.3573e-13                   6.0160e-17                    6.1738e-26
+2             2.603e-10     6.0160e-17                   6.0160e-17                    1.6137e-38
+3             2.603e-10     6.0160e-17                   6.0160e-17                    4.2240e-51
+
+== Condicionamiento ==
+κ₁(A) estimado (Hager sobre L y U, sin formar A⁻¹) = 4.4675e+13
+κ₂(A) control con numpy.linalg.cond            = 3.0847e+13
+ε (doble precisión, 2^-52)                     = 2.2204e-16
+cota κ₂·ε sobre ‖δx‖/‖x‖                       = 6.8495e-03  -> 2.2 dígitos garantizados por la cota
+error real (escalado, norma ∞)                 = 2.3573e-13  -> 12.6 dígitos reales
+κ₂ tras equilibrar filas (cada fila / su máx |a_ij|) = 8.1323e+03  -> κ_eq·ε = 1.8057e-12 (11.7 dígitos)
+casi dependencia: fila 7 ≈ 4.17725·fila 3 + 583.247·fila 5, residuo relativo (norma 2) = 2.283e-03
+
+== Control con numpy.linalg.solve (no sustituye la implementación propia) ==
+error relativo numpy vs exacta (norma ∞)       = 5.2322e-13  (dígitos mínimos correctos: 9)
+máx |x_propia − x_numpy| / ‖x‖∞                = 2.8749e-13
